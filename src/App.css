@@ -161,15 +161,15 @@
   flex: 1;
   overflow-y: auto;
   scroll-behavior: smooth;
+  display: flex;
+  flex-direction: column;
 }
 
 .right-column::-webkit-scrollbar { width: 3px; }
 .right-column::-webkit-scrollbar-track { background: transparent; }
 .right-column::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-.right-column--empty {
-  display: none;
-}
+/* right-column--empty is now visible; content handles the empty state */
 
 /* ============================================================
    PLACEHOLDER STATES
@@ -594,6 +594,156 @@
 .carousel__thumb--active { border-color: var(--accent-dim); opacity: 1; }
 
 /* ============================================================
+   SKELETON LOADING
+   ============================================================ */
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+}
+
+.skeleton-line {
+  border-radius: 4px;
+  background: linear-gradient(90deg, #EAECF0 25%, #F3F4F6 50%, #EAECF0 75%);
+  background-size: 600px 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-card {
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  height: 66px;
+  flex-shrink: 0;
+}
+
+.skeleton-card__image {
+  width: 66px;
+  min-width: 66px;
+  height: 66px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  background: linear-gradient(90deg, #EAECF0 25%, #F3F4F6 50%, #EAECF0 75%);
+  background-size: 600px 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-card__body {
+  padding: 0.55rem 0.7rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.skeleton-header {
+  height: 10px;
+  width: 72px;
+  border-radius: 5px;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(90deg, #EAECF0 25%, #F3F4F6 50%, #EAECF0 75%);
+  background-size: 600px 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* stagger fade-in for each skeleton card */
+.skeleton-card:nth-child(1) { opacity: 1; }
+.skeleton-card:nth-child(2) { opacity: 0.88; }
+.skeleton-card:nth-child(3) { opacity: 0.76; }
+.skeleton-card:nth-child(4) { opacity: 0.6; }
+.skeleton-card:nth-child(5) { opacity: 0.42; }
+
+/* ============================================================
+   RIGHT COLUMN EMPTY STATES
+   ============================================================ */
+.empty-state {
+  flex: 1;
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2.5rem;
+  background: var(--surface);
+  border: 1.5px dashed #D1D5DB;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+
+.empty-state__icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--accent-subtle);
+  border: 1.5px solid rgba(34, 197, 94, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+  color: var(--accent-dim);
+  flex-shrink: 0;
+}
+
+.empty-state__title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 0.4rem;
+}
+
+.empty-state__body {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin: 0;
+  max-width: 260px;
+}
+
+.empty-state__steps {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 100%;
+  max-width: 280px;
+  text-align: left;
+}
+
+.empty-state__step {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-size: 0.775rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.empty-state__step-num {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent-subtle);
+  border: 1px solid rgba(34, 197, 94, 0.22);
+  color: var(--accent-dim);
+  font-size: 0.65rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (max-width: 767px) {
@@ -629,5 +779,4 @@
 
   .center-column { width: 100%; min-width: 0; overflow-y: visible; }
   .right-column  { width: 100%; overflow-y: visible; }
-  .right-column--empty { display: none; }
 }
