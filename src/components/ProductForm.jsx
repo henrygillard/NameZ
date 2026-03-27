@@ -57,6 +57,52 @@ const CREATE_MEDIA_MUTATION = gql`
   }
 `;
 
+function ImageCarousel({ images, selectedImage, onSelect }) {
+  const [index, setIndex] = useState(0);
+
+  if (!images || images.length === 0) return null;
+
+  const prev = () => {
+    const next = (index - 1 + images.length) % images.length;
+    setIndex(next);
+    onSelect(images[next]);
+  };
+
+  const next = () => {
+    const n = (index + 1) % images.length;
+    setIndex(n);
+    onSelect(images[n]);
+  };
+
+  return (
+    <div className="carousel">
+      <div className="carousel__main">
+        <img src={images[index]} alt={`Image ${index + 1}`} className="carousel__img" />
+        {images.length > 1 && (
+          <>
+            <button className="carousel__btn carousel__btn--prev" onClick={prev} type="button">&#8249;</button>
+            <button className="carousel__btn carousel__btn--next" onClick={next} type="button">&#8250;</button>
+            <span className="carousel__counter">{index + 1} / {images.length}</span>
+          </>
+        )}
+      </div>
+      {images.length > 1 && (
+        <div className="carousel__thumbs">
+          {images.map((src, i) => (
+            <img
+              key={i}
+              src={src}
+              alt={`Thumbnail ${i + 1}`}
+              className={`carousel__thumb${i === index ? " carousel__thumb--active" : ""}`}
+              onClick={() => { setIndex(i); onSelect(src); }}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function ProductForm({ media, setMedia, onReset }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -149,6 +195,12 @@ export function ProductForm({ media, setMedia, onReset }) {
 
   return (
     <div className="panel-card" style={{ padding: "1.5rem" }}>
+      <ImageCarousel
+        images={media.Images}
+        selectedImage={media.Image}
+        onSelect={(src) => setMedia({ ...media, Image: src })}
+      />
+
       <h3
         style={{
           fontSize: "1rem",
@@ -157,6 +209,7 @@ export function ProductForm({ media, setMedia, onReset }) {
           marginBottom: "1rem",
           borderBottom: "1px solid #e1e3e5",
           paddingBottom: "0.75rem",
+          marginTop: media.Images?.length > 0 ? "1rem" : "0",
         }}
       >
         Product Details
