@@ -44,19 +44,43 @@ export default function SubscriptionPage() {
 
   const handleMutation = async () => {
     setLoading(true);
-    const params = new URL(window.location.href).searchParams;
-    const shop = params.get("shop");
-    const host = params.get("host");
-    const returnUrl = `${
-      window.location.origin
-    }/billing/callback?shop=${encodeURIComponent(
-      shop
-    )}&host=${encodeURIComponent(host)}`;
-    const isTest = import.meta.env.VITE_TEST_SUBSCRIPTIONS === "true";
-    const mutation = await createSubMutateFunction({
-      variables: { url: returnUrl, test: isTest },
-    });
-    window.top.location = mutation.data.appSubscriptionCreate.confirmationUrl;
+    try {
+      const params = new URL(window.location.href).searchParams;
+      const shop = params.get("shop");
+      const host = params.get("host");
+      const returnUrl = `${
+        window.location.origin
+      }/billing/callback?shop=${encodeURIComponent(
+        shop
+      )}&host=${encodeURIComponent(host)}`;
+      const isTest = import.meta.env.VITE_TEST_SUBSCRIPTIONS === "true";
+      const mutation = await createSubMutateFunction({
+        variables: { url: returnUrl, test: isTest },
+      });
+
+      const result = mutation.data?.appSubscriptionCreate;
+      console.log("[SubscriptionPage] mutation result:", JSON.stringify(result, null, 2));
+
+      if (result?.userErrors?.length > 0) {
+        const messages = result.userErrors.map((e) => e.message).join("\n");
+        alert(`Subscription error:\n${messages}`);
+        setLoading(false);
+        return;
+      }
+
+      const confirmationUrl = result?.confirmationUrl;
+      if (!confirmationUrl) {
+        alert("Could not get a confirmation URL from Shopify. Please try again or contact support.");
+        setLoading(false);
+        return;
+      }
+
+      window.top.location = confirmationUrl;
+    } catch (err) {
+      console.error("[SubscriptionPage] mutation error:", err);
+      alert(`Unexpected error: ${err.message}`);
+      setLoading(false);
+    }
   };
 
   return (
