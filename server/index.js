@@ -32,6 +32,7 @@ import {
 } from "./mongo/index.js";
 import { sendAlert } from "./alerting.js";
 import { lookupByKeyword } from "./ebay.js";
+import { lookupByName as upcLookup } from "./upcitemdb.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -256,57 +257,92 @@ export async function createServer(
     }
 
     try {
-      const ebayResult = await lookupByKeyword(name).catch((e) => {
-        console.warn("[ebay] keyword lookup failed:", e.message);
+      // Step 1: UPCItemDB first (richer product metadata)
+      const upcResult = await upcLookup(name).catch((e) => {
+        console.warn("[upcitemdb] lookup failed:", e.message);
         return null;
       });
 
-      if (!ebayResult) {
+      // Step 2: Fall back to eBay if UPC returned nothing or very few results
+      const UPC_THRESHOLD = 3;
+      const needsEbay = !upcResult || upcResult.items.length < UPC_THRESHOLD;
+      const ebayResult = needsEbay
+        ? await lookupByKeyword(name).catch((e) => {
+            console.warn("[ebay] keyword lookup failed:", e.message);
+            return null;
+          })
+        : null;
+
+      // Step 3: Bail if both sources returned nothing
+      if (!upcResult && !ebayResult) {
         incrementSearchFailCount(session.shop).catch((e) =>
           console.error("[searchFailCount] increment failed:", e.message)
         );
         logFailedSearch(session.shop, name).catch((e) =>
           console.error("[failedSearch] log failed:", e.message)
         );
-        return res.json({
-          error: "Sorry! No results found for that search.",
-        });
+        return res.json({ error: "Sorry! No results found for that search." });
       }
 
-      const { offers: ebayOffers = [], items = [] } = ebayResult;
+      // Step 4: Merge items — UPC first, eBay appended as fallback items
+      const upcItems   = upcResult?.items  ?? [];
+      const ebayItems  = ebayResult?.items ?? [];
+      const allItems   = [...upcItems, ...ebayItems];
 
-      const nonZeroOffers = ebayOffers.filter((i) => i.price !== 0);
-      const offersForPriceMin =
-        nonZeroOffers.length > 0 ? nonZeroOffers : ebayOffers;
-      const lowestPrice =
-        offersForPriceMin.length > 0
-          ? offersForPriceMin.reduce((a, b) => (a.price < b.price ? a : b))
-              .price
-          : 0;
-      const highestPrice =
-        ebayOffers.length > 0
-          ? ebayOffers.reduce((a, b) => (a.price > b.price ? a : b)).price
-          : 0;
+      // Step 5: Merge all offers — UPC merchants + eBay listings
+      const upcOffers  = upcResult?.offers  ?? [];
+      const ebayOffers = ebayResult?.offers ?? [];
+      const allOffers  = [...upcOffers, ...ebayOffers];
+
+      // Step 6: Deduplicate images
+      const allImages = [
+        ...new Set([
+          ...(upcResult?.images  ?? []),
+          ...(ebayResult?.images ?? []),
+        ]),
+      ];
+
+      // Step 7: Calculate price range from all live offer prices
+      //         plus UPCItemDB's historical recorded prices
+      const livePrices = allOffers
+        .map((o) => o.price)
+        .filter((p) => p > 0);
+
+      // Pull in UPCItemDB historical extremes when available
+      const recordedLows  = upcItems.map((i) => i.lowestRecorded).filter((v) => v != null);
+      const recordedHighs = upcItems.map((i) => i.highestRecorded).filter((v) => v != null);
+      const allLowCandidates  = [...livePrices, ...recordedLows];
+      const allHighCandidates = [...livePrices, ...recordedHighs];
+
+      const lowestPrice  = allLowCandidates.length  > 0 ? Math.min(...allLowCandidates)  : null;
+      const highestPrice = allHighCandidates.length > 0 ? Math.max(...allHighCandidates) : null;
+      const averagePrice =
+        lowestPrice != null && highestPrice != null
+          ? Math.round(((lowestPrice + highestPrice) / 2) * 100) / 100
+          : null;
+
+      // Step 8: Use UPC metadata when available, fall back to eBay title/images
+      const primaryItem = upcItems[0] ?? null;
+      const primaryResult = upcResult ?? ebayResult;
 
       const media = {
-        Title: ebayResult.title,
-        Image: ebayResult.images[0] ?? null,
-        Description: null,
-        Brand: null,
-        Model: null,
-        Color: null,
-        Size: null,
-        Category: null,
-        Dimension: null,
-        Weight: null,
-        LowestPrice: lowestPrice,
+        Title:       primaryResult.title,
+        Image:       allImages[0] ?? null,
+        Description: primaryItem?.description ?? null,
+        Brand:       primaryItem?.brand       ?? null,
+        Model:       primaryItem?.model       ?? null,
+        Color:       primaryItem?.color       ?? null,
+        Size:        primaryItem?.size        ?? null,
+        Category:    primaryItem?.category    ?? null,
+        Dimension:   primaryItem?.dimension   ?? null,
+        Weight:      primaryItem?.weight      ?? null,
+        LowestPrice:  lowestPrice,
         HighestPrice: highestPrice,
-        AveragePrice:
-          Math.round(((highestPrice + lowestPrice) / 2) * 100) / 100,
-        Images: ebayResult.images,
-        Offers: ebayOffers,
-        Price: req.query.defaults,
-        Items: items,
+        AveragePrice: averagePrice,
+        Images:  allImages,
+        Offers:  allOffers,
+        Price:   req.query.defaults,
+        Items:   allItems,
       };
 
       res.send(media);
