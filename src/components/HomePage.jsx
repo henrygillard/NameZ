@@ -124,7 +124,6 @@ export function HomePage({
         <Button onClick={handleSearch} primary>
           Search
         </Button>
-        <span className="header-byline">Powered by eBay data</span>
       </header>
 
       {/* CONTENT AREA */}
