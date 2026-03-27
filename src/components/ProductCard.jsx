@@ -17,8 +17,8 @@ export function ProductCard({ item, selected, onSelect }) {
         ) : (
           <div className="product-card__image-placeholder">
             <svg
-              width="24"
-              height="24"
+              width="20"
+              height="20"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -33,13 +33,11 @@ export function ProductCard({ item, selected, onSelect }) {
       </div>
       <div className="product-card__body">
         <p className="product-card__title">{item.title}</p>
-        {priceLabel && (
-          <p className="product-card__price">{priceLabel}</p>
-        )}
+        {priceLabel && <p className="product-card__price">{priceLabel}</p>}
       </div>
       {selected && (
         <div className="product-card__check">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5">
             <polyline points="20 6 9 17 4 12" />
           </svg>
         </div>

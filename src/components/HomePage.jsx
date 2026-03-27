@@ -113,9 +113,10 @@ export function HomePage({
         <div className="sidebar-header-container">
           <div className="sidebar-header">Name-Z</div>
         </div>
+        <span className="sidebar-search-label">Search Products</span>
         <input
           className="sidebar-input"
-          placeholder="Search by item name"
+          placeholder="Enter item name…"
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -126,6 +127,9 @@ export function HomePage({
         <Button onClick={handleSearch} primary>
           Search
         </Button>
+        <div className="sidebar-footer">
+          <p className="sidebar-footer-text">Powered by eBay data</p>
+        </div>
       </aside>
 
       {/* CONTENT AREA */}

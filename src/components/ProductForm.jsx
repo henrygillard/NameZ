@@ -105,7 +105,8 @@ function ImageCarousel({ images, selectedImage, onSelect }) {
 
 export function ProductForm({ media, setMedia, onReset }) {
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(null);
+  const [messageType, setMessageType] = useState("");
   const [mutateFunction] = useMutation(CREATE_PRODUCT_MUTATION);
   const [updateVariant] = useMutation(UPDATE_VARIANT_MUTATION);
   const [createMedia] = useMutation(CREATE_MEDIA_MUTATION);
@@ -120,6 +121,7 @@ export function ProductForm({ media, setMedia, onReset }) {
   const handleMutation = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setMessage(null);
     try {
       const result = await mutateFunction({
         variables: {
@@ -162,280 +164,150 @@ export function ProductForm({ media, setMedia, onReset }) {
       setLoading(false);
       const numericId = productId?.split("/").pop();
       const shop = new URL(window.location.href).searchParams.get("shop");
+      setMessageType("success");
       setMessage(
-        <div style={{ textAlign: "center" }}>
-          <h1 style={{ color: "green" }}>Product created successfully!</h1>
+        <>
+          <strong>Product created!</strong>
           {numericId && shop && (
-            <a
-              href={`https://${shop}/admin/products/${numericId}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: "#2c6ecb", textDecoration: "underline" }}
-            >
-              View product
-            </a>
+            <>
+              {" · "}
+              <a
+                href={`https://${shop}/admin/products/${numericId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View in admin
+              </a>
+            </>
           )}
-        </div>
+        </>
       );
     } catch (e) {
       console.error("mutation error:", e);
       setLoading(false);
-      setMessage(
-        <h1
-          style={{
-            color: "red",
-            textAlign: "center",
-          }}
-        >
-          Sorry, something went wrong. Please try again.
-        </h1>
-      );
+      setMessageType("error");
+      setMessage("Something went wrong. Please try again.");
     }
   };
 
+  const fmt = (v) => (v != null && v !== 0 ? `$${v}` : null);
+  const showPriceBar =
+    media.LowestPrice != null || media.HighestPrice != null;
+
   return (
-    <div className="panel-card" style={{ padding: "1.5rem" }}>
+    <div className="panel-card pf-container">
       <ImageCarousel
         images={media.Images}
         selectedImage={media.Image}
         onSelect={(src) => setMedia({ ...media, Image: src })}
       />
 
-      <h3
-        style={{
-          fontSize: "1rem",
-          fontWeight: "600",
-          color: "#202223",
-          marginBottom: "1rem",
-          borderBottom: "1px solid #e1e3e5",
-          paddingBottom: "0.75rem",
-          marginTop: media.Images?.length > 0 ? "1rem" : "0",
-        }}
-      >
-        Product Details
-      </h3>
+      {showPriceBar && (
+        <div className="pf-price-bar">
+          <div className="pf-price-stat pf-price-stat--low">
+            <span className="pf-price-stat__label">Market Low</span>
+            <span className="pf-price-stat__value">{fmt(media.LowestPrice) ?? "—"}</span>
+          </div>
+          <div className="pf-price-stat pf-price-stat--avg">
+            <span className="pf-price-stat__label">Average</span>
+            <span className="pf-price-stat__value">{fmt(media.AveragePrice) ?? "—"}</span>
+          </div>
+          <div className="pf-price-stat pf-price-stat--high">
+            <span className="pf-price-stat__label">Market High</span>
+            <span className="pf-price-stat__value">{fmt(media.HighestPrice) ?? "—"}</span>
+          </div>
+        </div>
+      )}
 
-      {/* Title */}
-      <div style={{ marginBottom: "0.75rem" }}>
-        <label
-          style={{
-            fontSize: "0.875rem",
-            fontWeight: "500",
-            display: "block",
-            marginBottom: "0.25rem",
-            color: "#202223",
-          }}
-        >
-          Title
-        </label>
-        <input
-          style={{
-            width: "100%",
-            height: "2rem",
-            padding: "0 0.75rem",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            fontSize: "0.9rem",
-            boxSizing: "border-box",
-          }}
-          onChange={handleChange}
-          name="Title"
-          value={media.Title}
-        />
+      <div className="pf-fields">
+        <p className="pf-section-title">Product Details</p>
+
+        <div className="pf-field">
+          <label className="pf-label">Title</label>
+          <input
+            className="pf-input"
+            onChange={handleChange}
+            name="Title"
+            value={media.Title}
+          />
+        </div>
+
+        <div className="pf-row">
+          <div className="pf-field">
+            <label className="pf-label">Type</label>
+            <input
+              className="pf-input"
+              onChange={handleChange}
+              name="Category"
+              value={media.Category ?? ""}
+            />
+          </div>
+          <div className="pf-field">
+            <label className="pf-label">Size</label>
+            <input
+              className="pf-input"
+              onChange={handleChange}
+              name="Size"
+              value={media.Size ?? ""}
+            />
+          </div>
+        </div>
+
+        <div className="pf-row">
+          <div className="pf-field">
+            <label className="pf-label">Weight</label>
+            <input
+              className="pf-input"
+              onChange={handleChange}
+              name="Weight"
+              value={media.Weight ?? ""}
+            />
+          </div>
+          <div className="pf-field">
+            <label className="pf-label pf-label--required">Price</label>
+            <input
+              className="pf-input"
+              onChange={handleChange}
+              required
+              name="Price"
+              value={
+                media.Price ??
+                (media.AveragePrice != null ? String(media.AveragePrice) : "")
+              }
+            />
+          </div>
+        </div>
+
+        <div className="pf-field">
+          <label className="pf-label">Description</label>
+          <textarea
+            className="pf-textarea"
+            name="Description"
+            onChange={handleChange}
+            value={media.Description ?? ""}
+          />
+        </div>
+
+        <div className="pf-field">
+          <label className="pf-label">Image URL</label>
+          <input
+            className="pf-input"
+            onChange={handleChange}
+            name="Image"
+            value={media.Image ?? ""}
+          />
+        </div>
       </div>
 
-      {/* Type */}
-      <div style={{ marginBottom: "0.75rem" }}>
-        <label
-          style={{
-            fontSize: "0.875rem",
-            fontWeight: "500",
-            display: "block",
-            marginBottom: "0.25rem",
-            color: "#202223",
-          }}
-        >
-          Type
-        </label>
-        <input
-          style={{
-            width: "100%",
-            height: "2rem",
-            padding: "0 0.75rem",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            fontSize: "0.9rem",
-            boxSizing: "border-box",
-          }}
-          onChange={handleChange}
-          name="Category"
-          value={media.Category ?? ""}
-        />
-      </div>
+      {message && (
+        <div className={`pf-message pf-message--${messageType}`}>
+          {message}
+        </div>
+      )}
 
-      {/* Size */}
-      <div style={{ marginBottom: "0.75rem" }}>
-        <label
-          style={{
-            fontSize: "0.875rem",
-            fontWeight: "500",
-            display: "block",
-            marginBottom: "0.25rem",
-            color: "#202223",
-          }}
-        >
-          Size
-        </label>
-        <input
-          style={{
-            width: "100%",
-            height: "2rem",
-            padding: "0 0.75rem",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            fontSize: "0.9rem",
-            boxSizing: "border-box",
-          }}
-          onChange={handleChange}
-          name="Size"
-          value={media.Size ?? ""}
-        />
-      </div>
-
-      {/* Weight */}
-      <div style={{ marginBottom: "0.75rem" }}>
-        <label
-          style={{
-            fontSize: "0.875rem",
-            fontWeight: "500",
-            display: "block",
-            marginBottom: "0.25rem",
-            color: "#202223",
-          }}
-        >
-          Weight
-        </label>
-        <input
-          style={{
-            width: "100%",
-            height: "2rem",
-            padding: "0 0.75rem",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            fontSize: "0.9rem",
-            boxSizing: "border-box",
-          }}
-          onChange={handleChange}
-          name="Weight"
-          value={media.Weight ?? ""}
-        />
-      </div>
-
-      {/* Price */}
-      <div style={{ marginBottom: "0.75rem" }}>
-        <label
-          style={{
-            fontSize: "0.875rem",
-            fontWeight: "500",
-            display: "block",
-            marginBottom: "0.25rem",
-            color: "#202223",
-          }}
-        >
-          Price*
-        </label>
-        <input
-          style={{
-            width: "100%",
-            height: "2rem",
-            padding: "0 0.75rem",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            fontSize: "0.9rem",
-            boxSizing: "border-box",
-          }}
-          onChange={handleChange}
-          required
-          name="Price"
-          value={
-            media.Price ??
-            (media.AveragePrice != null ? String(media.AveragePrice) : "")
-          }
-        />
-      </div>
-
-      {/* Description */}
-      <div style={{ marginBottom: "0.75rem" }}>
-        <label
-          style={{
-            fontSize: "0.875rem",
-            fontWeight: "500",
-            display: "block",
-            marginBottom: "0.25rem",
-            color: "#202223",
-          }}
-        >
-          Description
-        </label>
-        <textarea
-          name="Description"
-          onChange={handleChange}
-          value={media.Description ?? ""}
-          style={{
-            width: "100%",
-            height: "8rem",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            padding: "0.5rem 0.75rem",
-            fontSize: "0.9rem",
-            boxSizing: "border-box",
-            resize: "vertical",
-          }}
-        />
-      </div>
-
-      {/* Image URL */}
-      <div style={{ marginBottom: "0.75rem" }}>
-        <label
-          style={{
-            fontSize: "0.875rem",
-            fontWeight: "500",
-            display: "block",
-            marginBottom: "0.25rem",
-            color: "#202223",
-          }}
-        >
-          Image URL
-        </label>
-        <input
-          style={{
-            width: "100%",
-            height: "2rem",
-            padding: "0 0.75rem",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            fontSize: "0.9rem",
-            boxSizing: "border-box",
-          }}
-          onChange={handleChange}
-          name="Image"
-          value={media.Image ?? ""}
-        />
-      </div>
-
-      {/* Success / error message */}
-      {message && <div style={{ marginBottom: "0.75rem" }}>{message}</div>}
-
-      {/* Add Product button */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          marginTop: "1rem",
-        }}
-      >
+      <div className="pf-actions">
         <Button primary loading={loading} submit onClick={handleMutation}>
-          Add Product
+          Add Product to Store
         </Button>
       </div>
     </div>
