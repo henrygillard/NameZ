@@ -37,124 +37,100 @@
    ============================================================ */
 .dashboard-layout {
   display: flex;
+  flex-direction: column;
   height: 100vh;
   overflow: hidden;
   background: var(--bg);
 }
 
 /* ============================================================
-   SIDEBAR
+   HEADER
    ============================================================ */
-.sidebar-left {
-  width: 252px;
-  min-width: 252px;
+.app-header {
   background: var(--sidebar-bg);
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  padding: 1.75rem 1.25rem 1.5rem;
-  height: 100vh;
-  overflow-y: auto;
+  align-items: center;
+  padding: 0 1.25rem;
+  height: 52px;
+  gap: 0.875rem;
+  flex-shrink: 0;
   position: relative;
 }
 
-.sidebar-left::after {
+.app-header::after {
   content: '';
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 180px;
-  background: radial-gradient(ellipse at bottom center, rgba(34, 197, 94, 0.07) 0%, transparent 70%);
-  pointer-events: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(34, 197, 94, 0.35) 30%, rgba(34, 197, 94, 0.35) 70%, transparent 100%);
 }
 
-.sidebar-header-container {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  margin-bottom: 2rem;
-}
-
-.sidebar-header {
+.header-brand {
   font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
-  font-size: 1.625rem;
+  font-size: 1.375rem;
   font-weight: 700;
   color: #ffffff;
   letter-spacing: -0.025em;
   line-height: 1;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-right: 0.25rem;
 }
 
-.sidebar-header::after {
+.header-brand::after {
   content: '·';
   color: var(--accent);
   margin-left: 1px;
 }
 
-.sidebar-search-label {
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.3);
-  margin-bottom: 0.45rem;
-  display: block;
-}
-
-.sidebar-input {
-  width: 100%;
-  height: 2.375rem;
+.header-input {
+  flex: 1;
+  max-width: 480px;
+  height: 2.125rem;
   border: 1.5px solid var(--sidebar-border);
   border-radius: var(--radius);
   padding: 0 0.875rem;
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.08);
   color: #ffffff;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   font-family: 'DM Sans', sans-serif;
-  margin-bottom: 0.75rem;
   outline: none;
   transition: border-color 0.15s, background 0.15s;
 }
 
-.sidebar-input::placeholder {
-  color: rgba(255, 255, 255, 0.3);
+.header-input::placeholder {
+  color: rgba(255, 255, 255, 0.32);
 }
 
-.sidebar-input:focus {
-  border-color: rgba(34, 197, 94, 0.45);
-  background: rgba(255, 255, 255, 0.1);
+.header-input:focus {
+  border-color: rgba(34, 197, 94, 0.5);
+  background: rgba(255, 255, 255, 0.11);
 }
 
-/* Override Polaris button inside sidebar */
-.sidebar-left .Polaris-Button--primary {
-  width: 100% !important;
-  justify-content: center !important;
+/* Polaris button inside header */
+.app-header .Polaris-Button--primary {
   background: var(--accent-dim) !important;
   border-color: var(--accent-dim) !important;
   border-radius: var(--radius) !important;
   font-family: 'DM Sans', sans-serif !important;
   font-weight: 600 !important;
-  letter-spacing: 0.01em !important;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
-.sidebar-left .Polaris-Button--primary:hover {
+.app-header .Polaris-Button--primary:hover {
   background: #15803D !important;
   border-color: #15803D !important;
 }
 
-.sidebar-footer {
-  margin-top: auto;
-  padding-top: 1.5rem;
-  position: relative;
-  z-index: 1;
-}
-
-.sidebar-footer-text {
-  font-size: 0.68rem;
+.header-byline {
+  font-size: 0.65rem;
   color: rgba(255, 255, 255, 0.18);
-  text-align: center;
   letter-spacing: 0.04em;
-  margin: 0;
+  white-space: nowrap;
+  margin-left: auto;
 }
 
 /* ============================================================
@@ -622,34 +598,27 @@
    ============================================================ */
 @media (max-width: 767px) {
   .dashboard-layout {
-    flex-direction: column;
     height: auto;
     overflow: visible;
   }
 
-  .sidebar-left {
-    width: 100%;
-    min-width: 0;
+  .app-header {
     height: auto;
+    flex-wrap: wrap;
+    padding: 0.75rem 1rem;
+    gap: 0.625rem;
     position: sticky;
     top: 0;
     z-index: 100;
-    flex-direction: column;
-    align-items: stretch;
-    padding: 0.75rem 1rem;
-    overflow-y: visible;
   }
 
-  .sidebar-left::after { display: none; }
-
-  .sidebar-header-container { margin-bottom: 0.75rem; }
-
-  .sidebar-input {
+  .header-input {
+    max-width: none;
     width: 100%;
-    height: 2.75rem;
-    font-size: 1.125rem;
-    margin-bottom: 0.5rem;
+    flex: 1 1 200px;
   }
+
+  .header-byline { display: none; }
 
   .content-area {
     flex-direction: column;

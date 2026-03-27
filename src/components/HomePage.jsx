@@ -108,14 +108,11 @@ export function HomePage({
 
   return (
     <div className="dashboard-layout">
-      {/* LEFT SIDEBAR */}
-      <aside className="sidebar-left">
-        <div className="sidebar-header-container">
-          <div className="sidebar-header">Name-Z</div>
-        </div>
-        <span className="sidebar-search-label">Search Products</span>
+      {/* TOP HEADER */}
+      <header className="app-header">
+        <div className="header-brand">Name-Z</div>
         <input
-          className="sidebar-input"
+          className="header-input"
           placeholder="Enter item name…"
           type="text"
           value={query}
@@ -127,10 +124,8 @@ export function HomePage({
         <Button onClick={handleSearch} primary>
           Search
         </Button>
-        <div className="sidebar-footer">
-          <p className="sidebar-footer-text">Powered by eBay data</p>
-        </div>
-      </aside>
+        <span className="header-byline">Powered by eBay data</span>
+      </header>
 
       {/* CONTENT AREA */}
       <div className="content-area">
